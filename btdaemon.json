@@ -1,0 +1,15 @@
+{
+    "location": "auto",
+    "interval": 10,
+    "offset": 60,
+    "timeout": 60,
+    "devices": {
+        "bluetooth": [
+            "CC:20:E8:06:FC:60"
+        ],
+        "switches": [
+            "switch"
+        ]
+    }
+}
+

@@ -1,0 +1,11 @@
+[Unit]
+Description=Turn on the living room light when my bluetooth device is detected
+After=network.target bluetooth.target
+
+[Service]
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/home/sagar/workspace/btdaemon/btdaemon.py --config=/home/sagar/workspace/btdaemon/btdaemon.json
+Type=simple
+
+[Install]
+WantedBy=default.target
