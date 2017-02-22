@@ -11,6 +11,10 @@ from ouimeaux.environment import Environment
 from bluetooth import *
 
 
+CONNECTED = 'connected'
+UNCONNECTED = 'unconnected'
+
+
 def should_update(sunset, early_offset_min):
     """
     Only run this script if the time is between SUNSET-EARLY_OFFSET_MINmin and 12AM
@@ -52,7 +56,6 @@ if __name__ == '__main__':
 
     config = parse_config(args.config)
 
-    present = False
     running = True
     def handler(signum, frame):
         global running
@@ -86,17 +89,19 @@ if __name__ == '__main__':
     print location.name
     print 'Starting...'
 
+    last_state, state = UNCONNECTED, UNCONNECTED
     last_on_time = 0
     socket = connect_bt(config['devices']['bluetooth'][0])
     while running:
         try:
             socket.send('0')
-            present = True
+            last_state, state = state, CONNECTED
         except BluetoothError:
             print('Disconnected')
             socket = None
+            last_state, state = state, UNCONNECTED
         except AttributeError:
-            pass
+            last_state, state = state, UNCONNECTED
         finally:
             if not socket:
                 socket = connect_bt(config['devices']['bluetooth'][0])
@@ -104,11 +109,14 @@ if __name__ == '__main__':
         sun = location.sun()
         sunset = sun['sunset']
         if should_update(sunset, config['offset']):
-            if socket:
+            # only turn on  if we're going from UNCONNECTED -> CONNECTED
+            if socket and (last_state, state) == (UNCONNECTED, CONNECTED):
                 switch.on()
                 last_on_time = time.time()
+                print 'Turning light ON'
             elif not socket and time.time() - last_on_time > config['timeout'] * 60:
                 switch.off()
+                print 'Turning light OFF'
 
         time.sleep(config['interval'])
 
